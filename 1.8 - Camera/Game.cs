@@ -1,19 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing;
 using OpenTK;
-using OpenTK.Graphics.OpenGL4;
 using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Input;
 
 namespace LearnOpenGL_TK
 {
+    //We can now move around objects. However, how can we move our "camera", or modify our perspective?
+    //In this tutorial, I'll show you how to setup a full projection/view/model (PVM) matrix.
+    //In addition, we'll make the rectangle rotate over time.
     class Game : GameWindow
     {
         float[] vertices =
-{
+        {
             //Position          Texture coordinates
              0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
              0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
@@ -46,8 +46,10 @@ namespace LearnOpenGL_TK
         //so check out the web version for a good demonstration of what this does.
         Matrix4 projection;
 
+
         public Game(int width, int height, string title) : base(width, height, GraphicsMode.Default, title) { }
 
+        
         protected override void OnLoad(EventArgs e)
         {
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -127,7 +129,7 @@ namespace LearnOpenGL_TK
 
             //Finally, we have the model matrix. This determines the position of the model.
             Matrix4 model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time));
-
+            
             //Then, we pass all of these matrices to the vertex shader.
             //You could also multiply them here and then pass, which is faster, but having the separate matrices available is used for some advanced effects
 
@@ -182,6 +184,5 @@ namespace LearnOpenGL_TK
 
             base.OnUnload(e);
         }
-
     }
 }
