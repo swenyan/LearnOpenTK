@@ -27,15 +27,17 @@ namespace LearnOpenGL_TK
         const float YAW = -90.0f;
         const float PITCH = 0.0f;
         const float SPEED = 2.5f;
-        const float SENSITIVTY = 0.1f;
+        const float SENSITIVTY = 0.2f;
         const float ZOOM = 45.0f;
 
+        private GameWindow window;
+
         // Camera Attributes
-        public vec3 Position;
-        public vec3 Front;
-        public vec3 Up;
-        public vec3 Right;
-        public vec3 WorldUp;
+        public Vector3 Position;
+        public Vector3 Front;
+        public Vector3 Up;
+        public Vector3 Right;
+        public Vector3 WorldUp;
         // Eular Angles
         public float Yaw;
         public float Pitch;
@@ -44,40 +46,63 @@ namespace LearnOpenGL_TK
         public float MouseSensitivity;
         public float Zoom;
 
+        private bool isFirstFrame = true;
+
+        // View Matrix
+        private Matrix4 view;
+
+        // Projection Matrix
+        private Matrix4 projection;
+
         // Constructor with vectors
-        public Camera(vec3 position, vec3 up, float yaw = YAW, float pitch = PITCH)
+        public Camera(GameWindow window, Vector3 position, Vector3 up, float yaw = YAW, float pitch = PITCH)
         {
+            this.window = window;
+
             Position = position;
             WorldUp = up;
             Yaw = yaw;
             Pitch = pitch;
 
-            Front = new vec3(0, 0, -1f);
+            Front = new Vector3(0, 0, -1f);
             MovementSpeed = SPEED;
             MouseSensitivity = SENSITIVTY;
             Zoom = ZOOM;
-            updateCameraVectors();
+            UpdateCameraVectors();
+
+            view = new Matrix4();
+            projection = new Matrix4();
+
+            UpdateViewMatrix();
+            UpdateProjectionMatrix();
         }
 
         // Constructor with scalar values
-        public Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
+        public Camera(GameWindow window, float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : 
+            this(window, new Vector3(posX, posY, posZ), new Vector3(upX, upY, upZ), yaw, pitch)
         {
-            Position = new vec3(posX, posY, posZ);
-            WorldUp = new vec3(upX, upY, upZ);
-            Yaw = yaw;
-            Pitch = pitch;
-            Front = new vec3(0, 0, -1f);
-            MovementSpeed = SPEED;
-            MouseSensitivity = SENSITIVTY;
-            Zoom = ZOOM;
 
-            updateCameraVectors();
         }
 
         // Returns the view matrix calculated using Eular Angles and the LookAt Matrix
-        public mat4 GetViewMatrix()
+        public Matrix4 GetViewMatrix()
         {
-            return glm.lookAt(Position, Position + Front, Up);
+            return view;
+        }
+
+        public Matrix4 GetProjectionMatrix()
+        {
+            return projection;
+        }
+
+        private void UpdateViewMatrix()
+        {
+            view = Matrix4.LookAt(Position, Position + Front, Up);
+        }
+
+        private void UpdateProjectionMatrix()
+        {
+            projection = Matrix4.CreatePerspectiveFieldOfView((float)MathHelper.DegreesToRadians(Zoom), window.Width / window.Height, 0.1f, 100.0f);
         }
 
         // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
@@ -92,16 +117,24 @@ namespace LearnOpenGL_TK
                 Position -= Right * velocity;
             if (direction == Camera_Movement.RIGHT)
                 Position += Right * velocity;
+
+            UpdateViewMatrix();
         }
 
         // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
         public void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true)
         {
+            if(isFirstFrame)
+            {
+                isFirstFrame = false;
+                return;
+            }
+
             xoffset *= MouseSensitivity;
             yoffset *= MouseSensitivity;
 
             Yaw += xoffset;
-            Pitch += yoffset;
+            Pitch -= yoffset;
 
             // Make sure that when pitch is out of bounds, screen doesn't get flipped
             if (constrainPitch)
@@ -113,7 +146,9 @@ namespace LearnOpenGL_TK
             }
 
             // Update Front, Right and Up Vectors using the updated Eular angles
-            updateCameraVectors();
+            UpdateCameraVectors();
+
+            UpdateViewMatrix();
         }
 
         // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -125,20 +160,24 @@ namespace LearnOpenGL_TK
                 Zoom = 1.0f;
             if (Zoom >= 45.0f)
                 Zoom = 45.0f;
+
+            Console.WriteLine(Zoom);
+            UpdateProjectionMatrix();
         }
 
         // Calculates the front vector from the Camera's (updated) Eular Angles
-        private void updateCameraVectors()
+        private void UpdateCameraVectors()
         {
+            //Console.WriteLine("Yaw:{0},Pitch{1},Front:{2}", Yaw, Pitch, Front);
             // Calculate the new Front vector
-            vec3 front;
-            front.x = glm.cos(glm.radians(Yaw)) * glm.cos(glm.radians(Pitch));
-            front.y = glm.sin(glm.radians(Pitch));
-            front.z = glm.sin(glm.radians(Yaw)) * glm.cos(glm.radians(Pitch));
-            Front = glm.normalize(front);
+            Vector3 front;
+            front.X = glm.cos(glm.radians(Yaw)) * glm.cos(glm.radians(Pitch));
+            front.Y = glm.sin(glm.radians(Pitch));
+            front.Z = glm.sin(glm.radians(Yaw)) * glm.cos(glm.radians(Pitch));
+            Front = Vector3.Normalize(front);
             // Also re-calculate the Right and Up vector
-            Right = glm.normalize(glm.cross(Front, WorldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-            Up = glm.normalize(glm.cross(Right, Front));
+            Right = Vector3.Normalize(Vector3.Cross(Front, WorldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+            Up = Vector3.Normalize(Vector3.Cross(Right, Front));
         }
     };
 }

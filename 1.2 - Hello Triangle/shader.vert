@@ -20,17 +20,17 @@
 
 //This defines our input variable, aPosition.
 //It starts with the line "layout(location = 0)". This defines where this input variable will be located, which is needed for GL.VertexAttribPointer
-//However, you can omit it, and replace this with just "in vec3 aPosition". If you do that, you'll have to replace the 0 in GL.VertexAttribPointer with
+//However, you can omit it, and replace this with just "in Vector3 aPosition". If you do that, you'll have to replace the 0 in GL.VertexAttribPointer with
 //	a call to GL.GetAttribLocation(shaderHandle, attributeName)
 //Next, the keyword "in" defines this as an input variable. We'll have an example of the "out" keyword in the next tutorial.
-//Then, the keyword "vec3" means this is a vector with 3 floats inside.
-layout(location = 0) in vec3 aPosition;
+//Then, the keyword "Vector3" means this is a vector with 3 floats inside.
+layout(location = 0) in Vector3 aPosition;
 
 
 //Like C, we have an entrypoint function. In this case, it takes void and returns void, and must be named main.
 //You can do all sorts of calculations here to modify your vertices, but right now, we don't need to do any of that.
 //gl_Position is the final vertex position; pass a vec4 to it and you're done.
-//Keep in mind that we only pass a vec3 to this shader; the fourth component of a vertex is known as "w".
+//Keep in mind that we only pass a Vector3 to this shader; the fourth component of a vertex is known as "w".
 //It's only used in some more advanced OpenGL functions; it's not needed here.
 //so with a call to the vec4 function, we just give it a constant value of 1.0
 void main(void)

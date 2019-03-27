@@ -46,6 +46,7 @@ namespace LearnOpenGL_TK
         //so check out the web version for a good demonstration of what this does.
         Matrix4 projection;
 
+        Camera camera;
 
         public Game(int width, int height, string title) : base(width, height, GraphicsMode.Default, title) { }
 
@@ -107,6 +108,8 @@ namespace LearnOpenGL_TK
             //  Far-clipping. Any vertices farther away from the camera than this value will be clipped.
             projection = Matrix4.CreatePerspectiveFieldOfView((float)MathHelper.DegreesToRadians(45.0), Width / Height, 0.1f, 100.0f);
 
+            camera = new Camera(this, new Vector3(0, 0, 3f), new Vector3(0, 1, 0));
+
             //Now, head over to OnRenderFrame to see how we setup the model matrix
 
             base.OnLoad(e);
@@ -138,8 +141,8 @@ namespace LearnOpenGL_TK
             //If you pass the individual matrices to the shader and multiply there, you have to do in the order "model, view, projection",
             //but if you do it here and then pass it to the vertex, you have to do it in order "projection, view, model".
             shader.SetMatrix4("model", model);
-            shader.SetMatrix4("view", view);
-            shader.SetMatrix4("projection", projection);
+            shader.SetMatrix4("view", camera.GetViewMatrix());
+            shader.SetMatrix4("projection", camera.GetProjectionMatrix());
 
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
 
@@ -158,9 +161,46 @@ namespace LearnOpenGL_TK
                 Exit();
             }
 
+            if(input.IsAnyKeyDown)
+            {
+                if (input.IsKeyDown(Key.W))
+                {
+                    camera.ProcessKeyboard(Camera_Movement.FORWARD, (float)e.Time);
+                }
+
+                if (input.IsKeyDown(Key.A))
+                {
+                    camera.ProcessKeyboard(Camera_Movement.LEFT, (float)e.Time);
+                }
+
+                if (input.IsKeyDown(Key.S))
+                {
+                    camera.ProcessKeyboard(Camera_Movement.BACKWARD, (float)e.Time);
+                }
+
+                if (input.IsKeyDown(Key.D))
+                {
+                    camera.ProcessKeyboard(Camera_Movement.RIGHT, (float)e.Time);
+                }
+            }
+
             base.OnUpdateFrame(e);
         }
 
+        protected override void OnMouseMove(MouseMoveEventArgs e)
+        {
+            Console.WriteLine("{0},{1}", e.XDelta, e.YDelta);
+            camera.ProcessMouseMovement(e.XDelta, e.YDelta);
+
+            base.OnMouseMove(e);
+        }
+
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
+        {
+            camera.ProcessMouseScroll(e.DeltaPrecise);
+
+            base.OnMouseWheel(e);
+        }
 
         protected override void OnResize(EventArgs e)
         {
