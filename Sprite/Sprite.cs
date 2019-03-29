@@ -12,7 +12,21 @@ namespace LearnOpenGL_TK
 {
     class Sprite : IDisposable
     {
-        private static float[] quad_vertices =
+        private const int U_MIN_IDX = 0;
+        private const int V_MIN_IDX = 1;
+        private const int U_MAX_IDX = 2;
+        private const int V_MAX_IDX = 3;
+
+        private const int U_11 = 3;
+        private const int V_11 = 4;
+        private const int U_10 = 8;
+        private const int V_10 = 9;
+        private const int U_00 = 13;
+        private const int V_00 = 14;
+        private const int U_01 = 18;
+        private const int V_01 = 19;
+
+        private float[] quad_vertices =
         {
             //Position          Texture coordinates
              0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
@@ -21,22 +35,36 @@ namespace LearnOpenGL_TK
             -0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // top left 
         };
 
-        private static uint[] quad_indices =
+        private uint[] quad_indices =
         {
             0, 1, 3,
             1, 2, 3
         };
 
-        private static Mesh quad = new Mesh(quad_vertices, quad_indices);
+        private Mesh quad;
 
-        private static Shader shader = new Shader("shader.vert", "shader.frag");
+        private Shader shader = new Shader("shader.vert", "shader.frag");
 
         private Texture texture;
 
         private int VertexArrayObject;
 
-        public Sprite(string texturePath)
+        public Sprite(string texturePath, float[] uv)
         {
+            if(uv != null)
+            {
+                quad_vertices[U_00] = uv[U_MIN_IDX];
+                quad_vertices[V_00] = uv[V_MIN_IDX];
+                quad_vertices[U_01] = uv[U_MIN_IDX];
+                quad_vertices[V_01] = uv[V_MAX_IDX];
+                quad_vertices[U_10] = uv[U_MAX_IDX];
+                quad_vertices[V_10] = uv[V_MIN_IDX];
+                quad_vertices[U_11] = uv[U_MAX_IDX];
+                quad_vertices[V_11] = uv[V_MAX_IDX];
+            }
+
+            quad = new Mesh(quad_vertices, quad_indices);
+
             shader.Use();
 
             texture = new Texture(texturePath);
@@ -82,22 +110,13 @@ namespace LearnOpenGL_TK
             GL.DrawElements(PrimitiveType.Triangles, quad_indices.Length, DrawElementsType.UnsignedInt, 0);
         }
 
-        public static void DisposeShader()
-        {
-            shader.Dispose();
-        }
-
-        public static void DisposeQuad()
-        {
-            quad.Dispose();
-        }
-
         ~Sprite()
         {
             Console.WriteLine("Dispose sprite");
             GL.DeleteVertexArray(VertexArrayObject);
             texture.Dispose();
-            //shader.Dispose();
+            shader.Dispose();
+            quad.Dispose();
         }
 
         private bool disposedValue = false;
@@ -113,8 +132,8 @@ namespace LearnOpenGL_TK
 
                 GL.DeleteVertexArray(VertexArrayObject);
                 texture.Dispose();
-                //shader.Dispose();
-                //quad.Dispose();
+                shader.Dispose();
+                quad.Dispose();
                 disposedValue = true;
             }
         }
